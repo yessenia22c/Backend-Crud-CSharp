@@ -1,5 +1,6 @@
 ﻿using Backend.DTOs;
 using Backend.Models;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,17 @@ namespace Backend.Controllers
     public class UsuarioController : ControllerBase
     {
         private TiendaContext _context;
+        private IValidator<UsuarioInsertDto> _usuarioInsertValidator;
+        private IValidator<UsuarioUpdateDto> _usuarioUpdateValidator;
 
-        public UsuarioController(TiendaContext context)
+        public UsuarioController(TiendaContext context,
+            IValidator<UsuarioInsertDto> usuarioInsertValidator,
+            IValidator<UsuarioUpdateDto> usuarioUpdateValidator
+            )
         {
             _context = context;
+            _usuarioInsertValidator = usuarioInsertValidator;
+            _usuarioUpdateValidator = usuarioUpdateValidator;
         }
         [HttpGet]
         public async Task<IEnumerable<UsuarioDto>> Get() =>
@@ -47,6 +55,11 @@ namespace Backend.Controllers
         [HttpPost]
         public async Task<ActionResult<UsuarioDto>> Add(UsuarioInsertDto usuarioInsertDto)
         {
+            var validationResult = await _usuarioInsertValidator.ValidateAsync(usuarioInsertDto);
+            if (!validationResult.IsValid) 
+            {
+                return BadRequest(validationResult.Errors);
+            }
             var usuario = new Usuario()
             {
                 UserName = usuarioInsertDto.UserName,
@@ -71,6 +84,10 @@ namespace Backend.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<UsuarioDto>> Update(int id, UsuarioUpdateDto usuarioUpdateDto)
         {
+            var validationResult = await _usuarioUpdateValidator.ValidateAsync(usuarioUpdateDto);
+            if(!validationResult.IsValid){
+                return BadRequest(validationResult.Errors);
+            }
             var usuario = await _context.Usuarios.FindAsync(id);
             if(usuario == null)
             {
