@@ -1,5 +1,6 @@
 using Backend.DTOs;
 using Backend.Models;
+using Backend.Services;
 using Backend.Validators;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 //Entity Framework de MySql
 builder.Services.AddDbContext<TiendaContext>(options =>

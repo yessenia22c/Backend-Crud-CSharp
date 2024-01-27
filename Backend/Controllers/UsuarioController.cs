@@ -1,5 +1,6 @@
 ﻿using Backend.DTOs;
 using Backend.Models;
+using Backend.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,45 +12,34 @@ namespace Backend.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
-        private TiendaContext _context;
+        // private TiendaContext _context;
         private IValidator<UsuarioInsertDto> _usuarioInsertValidator;
         private IValidator<UsuarioUpdateDto> _usuarioUpdateValidator;
 
-        public UsuarioController(TiendaContext context,
+        private IUsuarioService _usuarioService;
+
+        public UsuarioController(
+            // TiendaContext context,
             IValidator<UsuarioInsertDto> usuarioInsertValidator,
-            IValidator<UsuarioUpdateDto> usuarioUpdateValidator
+            IValidator<UsuarioUpdateDto> usuarioUpdateValidator,
+            IUsuarioService usuarioService
             )
         {
-            _context = context;
+            // _context = context;
             _usuarioInsertValidator = usuarioInsertValidator;
             _usuarioUpdateValidator = usuarioUpdateValidator;
+            _usuarioService = usuarioService;
         }
         [HttpGet]
         public async Task<IEnumerable<UsuarioDto>> Get() =>
-            await _context.Usuarios.Select(u => new UsuarioDto
-            {
-                UsuarioID = u.UsuarioId,
-                UserName = u.UserName,
-                Email = u.Email,
-                TipoUsuarioId = u.TipoUsuarioID
-            }).ToListAsync();
+            await _usuarioService.Get();
 
         [HttpGet("{id}")]
         public async Task<ActionResult<UsuarioDto>> GetById(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
+            var usuarioDto = await _usuarioService.GetById(id);
 
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-            var usuarioDto = new UsuarioDto {
-                UsuarioID = usuario.UsuarioId,
-                UserName = usuario.UserName,
-                Email = usuario.Email,
-                TipoUsuarioId = usuario.TipoUsuarioID
-            };
-            return Ok(usuarioDto);
+            return usuarioDto == null? NotFound() : Ok(usuarioDto);
         }
 
         [HttpPost]
@@ -60,26 +50,10 @@ namespace Backend.Controllers
             {
                 return BadRequest(validationResult.Errors);
             }
-            var usuario = new Usuario()
-            {
-                UserName = usuarioInsertDto.UserName,
-                Password = usuarioInsertDto.Password,
-                Email = usuarioInsertDto.Email,
-                TipoUsuarioID = usuarioInsertDto.TipoUsuarioID
+            
+            var usuarioDto = await _usuarioService.Add(usuarioInsertDto);
 
-            };
-            await _context.Usuarios.AddAsync(usuario);
-            await _context.SaveChangesAsync();
-
-            var usuarioDto = new UsuarioDto
-            {
-                UsuarioID = usuario.UsuarioId,
-                UserName = usuario.UserName,
-                Email = usuario.Email,
-                TipoUsuarioId = usuario.TipoUsuarioID
-            };
-
-            return CreatedAtAction(nameof(GetById), new { id = usuario.UsuarioId }, usuarioDto);
+            return CreatedAtAction(nameof(GetById), new { id = usuarioDto.UsuarioID }, usuarioDto);
         }
         [HttpPut("{id}")]
         public async Task<ActionResult<UsuarioDto>> Update(int id, UsuarioUpdateDto usuarioUpdateDto)
@@ -88,41 +62,16 @@ namespace Backend.Controllers
             if(!validationResult.IsValid){
                 return BadRequest(validationResult.Errors);
             }
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if(usuario == null)
-            {
-                return NotFound();
-
-            }
-            usuario.UserName = usuarioUpdateDto.UserName;
-            usuario.Password = usuarioUpdateDto.Password;
-            usuario.Email = usuarioUpdateDto.Email;
-            usuario.TipoUsuarioID = usuarioUpdateDto.TipoUsuarioId;
-
-            await _context.SaveChangesAsync();
-            var usuarioDto = new UsuarioDto
-            {
-                UsuarioID = usuario.UsuarioId,
-                UserName = usuario.UserName,
-                Email = usuario.Email,
-                TipoUsuarioId = usuario.TipoUsuarioID
-            };
-
-            return Ok(usuarioDto);
+            
+            var usuarioDto = await _usuarioService.Update(id, usuarioUpdateDto);
+           
+            return usuarioDto == null? NotFound() : Ok(usuarioDto);
         }
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
+        public async Task<ActionResult<UsuarioDto>> Delete(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
-
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
-            return Ok();
+            var usuarioDto = await _usuarioService.Delete(id);
+            return usuarioDto == null ? NotFound() : Ok(usuarioDto);
         }
     }
 }
