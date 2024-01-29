@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddKeyedScoped<ICommonService<UsuarioDto, UsuarioInsertDto, UsuarioUpdateDto>, UsuarioService>("usuarioService");
 
 //Entity Framework de MySql
 builder.Services.AddDbContext<TiendaContext>(options =>

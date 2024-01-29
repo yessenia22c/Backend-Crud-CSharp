@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services
 {
-    public class UsuarioService : IUsuarioService
+    public class UsuarioService : ICommonService<UsuarioDto, UsuarioInsertDto, UsuarioUpdateDto>
     {
         private TiendaContext _context;
 

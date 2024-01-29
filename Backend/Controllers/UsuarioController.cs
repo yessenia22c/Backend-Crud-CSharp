@@ -16,13 +16,13 @@ namespace Backend.Controllers
         private IValidator<UsuarioInsertDto> _usuarioInsertValidator;
         private IValidator<UsuarioUpdateDto> _usuarioUpdateValidator;
 
-        private IUsuarioService _usuarioService;
+        private ICommonService<UsuarioDto, UsuarioInsertDto, UsuarioUpdateDto> _usuarioService;
 
         public UsuarioController(
             // TiendaContext context,
             IValidator<UsuarioInsertDto> usuarioInsertValidator,
             IValidator<UsuarioUpdateDto> usuarioUpdateValidator,
-            IUsuarioService usuarioService
+            [FromKeyedServices("usuarioService")] ICommonService<UsuarioDto, UsuarioInsertDto, UsuarioUpdateDto> usuarioService
             )
         {
             // _context = context;
